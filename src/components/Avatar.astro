@@ -1,0 +1,26 @@
+---
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+---
+
+<div class={`avatar-swap group relative border-[3px] border-ink shadow-ink ${className}`}>
+  <img
+    src="/Profile-Komik.jpg"
+    alt="Comic-style portrait of the author"
+    width="1024"
+    height="1024"
+    loading="lazy"
+    class="block w-full"
+  />
+  <img
+    src="/Profile.jpg"
+    alt=""
+    aria-hidden="true"
+    width="500"
+    height="500"
+    loading="lazy"
+    class="absolute inset-0 block h-full w-full opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+  />
+</div>

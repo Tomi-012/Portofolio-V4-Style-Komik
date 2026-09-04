@@ -1,0 +1,46 @@
+---
+import SectionHead from "./SectionHead.astro";
+import { getDict, type Locale } from "../i18n/ui";
+
+interface Props {
+  locale?: Locale;
+}
+const { locale = "en" } = Astro.props;
+const t = getDict(locale);
+const letters = t.letters.items;
+---
+
+<section id="letters" class="px-4 pt-16 sm:px-6 sm:pt-24">
+  <div class="mx-auto max-w-7xl">
+    <SectionHead chapter={t.letters.chapter} title={t.letters.title} note={t.letters.note} />
+
+    <div class="grid gap-6 md:grid-cols-3">
+      {
+        letters.map((l, i) => (
+          <figure
+            class:list={[
+              "reveal relative flex flex-col border-[3px] border-ink p-6 shadow-ink",
+              i === 1 ? "bg-ink text-paper md:mt-7" : "bg-panel md:mt-0",
+              i === 2 && "md:mt-3",
+            ]}
+            style={`--tilt:${l.tilt}; --reveal-delay:${i * 120}ms;`}
+          >
+            <svg viewBox="0 0 40 30" class:list={["h-8 w-10", i === 1 ? "fill-paper" : "fill-ink"]} aria-hidden="true">
+              <path d="M0 30 V14 Q0 0 14 0 h4 v8 h-4 q-4 0-4 6 v0 h8 v16 Z M22 30 V14 Q22 0 36 0 h4 v8 h-4 q-4 0-4 6 v0 h8 v16 Z" />
+            </svg>
+            <blockquote class:list={["mt-4 flex-1 text-base leading-relaxed italic", i === 1 ? "text-paper/90" : "text-ink/90"]}>“{l.quote}”</blockquote>
+            <figcaption class:list={["mt-5 border-t-[3px] pt-4", i === 1 ? "border-paper" : "border-ink"]}>
+              <p class="font-display text-xl tracking-wide">{l.name}</p>
+              <p class:list={["font-caption text-xs font-medium tracking-[0.14em] uppercase", i === 1 ? "text-paper/60" : "text-ink/60"]}>{l.role}</p>
+            </figcaption>
+            {"stamp" in l && l.stamp && (
+              <span class="pointer-events-none absolute top-4 right-4 rotate-12 border-[2.5px] border-ink bg-paper px-2 py-0.5 font-display text-sm tracking-widest text-ink/70">
+                {l.stamp}
+              </span>
+            )}
+          </figure>
+        ))
+      }
+    </div>
+  </div>
+</section>

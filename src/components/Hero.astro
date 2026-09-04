@@ -1,0 +1,246 @@
+---
+import Sfx from "./Sfx.astro";
+import { getDict, type Locale } from "../i18n/ui";
+
+interface Props {
+  locale?: Locale;
+}
+const { locale = "en" } = Astro.props;
+const t = getDict(locale);
+const marqueeItems = t.hero.marquee;
+---
+
+<section id="top" class="px-4 pt-6 sm:px-6 sm:pt-10">
+  <div class="mx-auto max-w-7xl">
+    <div class="panel-ink reveal relative overflow-hidden">
+      <!-- halftone corner washes -->
+      <div class="halftone pointer-events-none absolute -top-8 -left-8 size-56 text-ink opacity-[0.12]" aria-hidden="true"></div>
+      <div class="halftone pointer-events-none absolute -right-10 -bottom-10 size-72 text-ink opacity-[0.12]" aria-hidden="true"></div>
+
+      <div class="relative grid gap-10 p-6 sm:p-10 lg:grid-cols-[7fr_5fr] lg:gap-12 lg:p-14">
+        <!-- cover art: name & role -->
+        <div class="relative">
+          <div class="mb-5 flex flex-wrap items-center gap-2">
+            <span class="caption-box bg-ink px-2.5 py-1 text-xs font-semibold text-paper">{t.hero.stamps.issue}</span>
+            <span class="caption-box bg-panel px-2.5 py-1 text-xs font-semibold">{t.hero.stamps.price}</span>
+            <span class="caption-box hidden bg-panel px-2.5 py-1 text-xs font-semibold sm:inline-block">{t.hero.stamps.approved}</span>
+          </div>
+
+          <h1 class="font-display leading-[0.86] tracking-wide">
+            <span class="block rotate-[-2deg] text-[clamp(4.5rem,11vw,8.5rem)]">ILHAM</span>
+            <span
+              class="block rotate-[1.2deg] text-[clamp(4.5rem,11vw,8.5rem)] text-transparent"
+              style="-webkit-text-stroke: 3px var(--color-ink); paint-order: stroke fill;">BUSTOMI</span
+            >
+          </h1>
+
+          <p class="caption-box mt-6 inline-block -rotate-1 bg-panel px-4 py-2 text-base font-semibold sm:text-lg">
+            {t.hero.role}
+          </p>
+
+          <p class="mt-6 max-w-md text-base leading-relaxed text-ink/85 sm:text-lg">
+            {t.hero.lede}
+          </p>
+
+          <div class="mt-8 flex flex-wrap gap-4">
+            <a href={locale === "id" ? "/id/#saga" : "#saga"} class="btn-ink-solid px-6 py-3 text-xl hover:-translate-y-0.5 hover:shadow-ink">{t.hero.ctaSaga}</a>
+            <a href={locale === "id" ? "/id/#signal" : "#signal"} class="btn-ink px-6 py-3 text-xl hover:-translate-y-0.5 hover:shadow-ink">{t.hero.ctaHire}</a>
+          </div>
+
+          <Sfx
+            text="KA-POW!"
+            size={190}
+            tilt={-12}
+            solid
+            backdrop
+            pop
+            delay={450}
+            class="top-16 right-0 origin-top-right scale-[0.55] sm:top-20 sm:scale-75 xl:top-24 xl:scale-100"
+          />
+        </div>
+
+        <!-- mini panels -->
+        <div class="flex flex-col gap-5">
+          <div class="reveal border-[3px] border-ink bg-ink p-4 font-mono text-[13px] leading-relaxed text-paper shadow-ink-sm sm:text-sm" style="--reveal-delay:120ms">
+            <p><span class="text-ink bg-paper px-1">$</span> whoami</p>
+            <p class="opacity-80">&gt; {t.hero.whoami}</p>
+            <p class="mt-2"><span class="bg-paper px-1 text-ink">$</span> cat status.txt</p>
+            <p class="opacity-80">&gt; open_to_work = <span class="font-bold underline decoration-2 underline-offset-2">TRUE</span></p>
+            <p class="mt-2 flex items-center gap-2">
+              <span class="shrink-0 bg-paper px-1 text-ink">$</span>
+              <span class="relative min-w-0 flex-1 overflow-hidden">
+                <span
+                  aria-hidden="true"
+                  class="block whitespace-nowrap font-mono text-[13px] leading-5 sm:text-sm"
+                >
+                  <span id="term-echo" class="text-paper"></span><span
+                    id="term-caret"
+                    class="inline-block h-4 w-2.5 translate-y-0.5 animate-pulse bg-paper motion-reduce:animate-none"></span><span
+                    id="term-hint"
+                    class="text-paper/35">{t.hero.terminalHint}</span
+                  >
+                </span>
+                <input
+                  id="term-input"
+                  type="text"
+                  spellcheck="false"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  aria-label={t.hero.terminalAria}
+                  class="absolute inset-0 h-full w-full cursor-text bg-transparent font-mono text-[13px] text-transparent caret-transparent outline-none sm:text-sm"
+                />
+              </span>
+            </p>
+          </div>
+
+          <div class="reveal relative overflow-hidden border-[3px] border-ink bg-paper p-4 shadow-ink-sm" style="--reveal-delay:240ms">
+            <div id="hero-speedlines" class="speedlines absolute inset-0 text-ink opacity-[0.07]" aria-hidden="true"></div>
+            <p class="caption-box relative mb-2 inline-block bg-ink px-2 py-0.5 text-xs font-semibold text-paper">{t.hero.meanwhile}</p>
+            <p class="relative font-display text-2xl leading-tight tracking-wide sm:text-3xl">
+              {t.hero.inking}
+            </p>
+          </div>
+
+          <div class="reveal flex items-center gap-4 border-[3px] border-ink bg-paper p-4 shadow-ink-sm" style="--reveal-delay:360ms">
+            <span class="relative grid size-11 shrink-0 place-items-center rounded-full border-[3px] border-ink" aria-hidden="true">
+              <span class="size-4 rounded-full bg-ink"></span>
+              <span class="absolute inset-0 halftone-fine text-ink opacity-20"></span>
+            </span>
+            <p class="text-sm leading-snug text-ink/85">
+              <strong class="font-caption text-sm font-semibold tracking-wide uppercase">{t.hero.base}</strong>
+              <br />{t.hero.baseValue}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ticker strip -->
+    <div class="mt-5 overflow-hidden border-[3px] border-ink bg-ink py-2.5 text-paper" aria-hidden="true">
+      <div class="marquee-track flex w-max items-center gap-8 pr-8">
+        {
+          [0, 1].map(() =>
+            marqueeItems.map((item) => (
+              <span class="flex items-center gap-8 font-display text-lg tracking-widest whitespace-nowrap">
+                {item}
+                <svg viewBox="0 0 24 24" class="size-4 fill-current" aria-hidden="true">
+                  <path d="M12 1l2.6 6.9L22 9l-5.4 4.8L18.2 22 12 17.8 5.8 22l1.6-8.2L2 9l7.4-1.1z" />
+                </svg>
+              </span>
+            ))
+          )
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // The terminal line runs a self-typing demo — until a visitor types,
+  // then it belongs to them. After a few idle seconds (or Enter), the
+  // demo quietly takes the line back.
+  const input = document.getElementById("term-input") as HTMLInputElement | null;
+  if (input) {
+    const commands = [
+      'git commit -m "ship it!"',
+      "npm run dev",
+      "vercel deploy --prod",
+      "astro build",
+      "git push origin main",
+      "npm run test -- --watch",
+      "docker compose up -d",
+      "pnpm add tailwindcss",
+      "npx astro check",
+      "node scripts/ink-the-saga.mjs",
+    ];
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const IDLE_MS = 4000;
+
+    const echo = document.getElementById("term-echo");
+    const hint = document.getElementById("term-hint");
+    const setVal = (v: string) => {
+      input.value = v;
+      if (echo) echo.textContent = v;
+      if (hint) hint.classList.toggle("hidden", v.length > 0);
+    };
+
+    let cmd = 0;
+    let pos = 0;
+    let deleting = false;
+    let mode: "auto" | "user" = "auto";
+    let timer: number | undefined;
+    let idleTimer: number | undefined;
+
+    const tick = () => {
+      if (mode !== "auto") return;
+      const text = commands[cmd];
+      if (!deleting) {
+        setVal(text.slice(0, ++pos));
+        if (pos === text.length) {
+          deleting = true;
+          timer = window.setTimeout(tick, 1700); // hold the finished command
+          return;
+        }
+        timer = window.setTimeout(tick, 55 + Math.random() * 70); // human-ish keystrokes
+      } else {
+        setVal(text.slice(0, --pos));
+        if (pos === 0) {
+          deleting = false;
+          cmd = (cmd + 1) % commands.length;
+          timer = window.setTimeout(tick, 420); // beat before the next command
+          return;
+        }
+        timer = window.setTimeout(tick, 26);
+      }
+    };
+
+    const startAuto = () => {
+      mode = "auto";
+      setVal("");
+      pos = 0;
+      deleting = false;
+      if (!reduced) timer = window.setTimeout(tick, 600);
+    };
+
+    if (!reduced) timer = window.setTimeout(tick, 900);
+
+    // Human takes over: wipe the demo text so their keystrokes start clean.
+    const takeover = () => {
+      if (mode !== "user") {
+        mode = "user";
+        clearTimeout(timer);
+        setVal("");
+      }
+      clearTimeout(idleTimer);
+      idleTimer = window.setTimeout(startAuto, IDLE_MS);
+    };
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        clearTimeout(idleTimer);
+        startAuto();
+        return;
+      }
+      takeover();
+    });
+
+    // IME / autocorrect / paste paths that skip clean keydown events:
+    // strip the demo prefix instead of wiping, so nothing the user typed is lost.
+    input.addEventListener("input", () => {
+      if (mode !== "user") {
+        mode = "user";
+        clearTimeout(timer);
+        setVal(input.value.slice(pos));
+      } else {
+        // normal typing after takeover: keep the visible echo in sync
+        setVal(input.value);
+      }
+      clearTimeout(idleTimer);
+      idleTimer = window.setTimeout(startAuto, IDLE_MS);
+    });
+
+    // clicking anywhere on the terminal hands focus to the input line
+    input.closest("div")?.addEventListener("click", () => input.focus());
+  }
+</script>

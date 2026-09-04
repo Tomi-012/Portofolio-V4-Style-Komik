@@ -1,0 +1,131 @@
+---
+import { getDict, type Locale } from "../i18n/ui";
+
+interface Props {
+  locale?: Locale;
+  langHref?: string;
+}
+const { locale = "en", langHref } = Astro.props;
+const t = getDict(locale);
+const path = Astro.url.pathname;
+const onId = locale === "id";
+const homePath = onId ? "/id/" : "/";
+const isHome = path === homePath || path === (onId ? "/id/index.html" : "/index.html");
+const base = isHome ? "" : homePath;
+
+// Toggle target: swap the locale prefix on the current path.
+const switchHref =
+  langHref ?? (onId ? path.replace(/^\/id/, "") || "/" : `/id${path === "/" ? "/" : path}`);
+const switchLabel = onId ? "EN" : "ID";
+
+const links = [
+  { href: "#origin", label: t.nav.origin },
+  { href: "#saga", label: t.nav.saga },
+  { href: "#powers", label: t.nav.powers },
+  { href: "#arc", label: t.nav.arc },
+  { href: "#letters", label: t.nav.letters },
+  { href: "#signal", label: t.nav.signal },
+];
+---
+
+<header class="sticky top-0 z-40 border-b-[3px] border-ink bg-ink text-paper">
+  <div class="mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 sm:px-6">
+    <a href={`${base}#top`} class="group flex shrink-0 items-center gap-2 py-2 sm:gap-3 sm:py-2.5">
+      <span class="grid size-8 shrink-0 place-items-center border-[3px] border-paper bg-paper text-ink transition-transform duration-200 group-hover:rotate-[-6deg] sm:size-9" aria-hidden="true">
+        <svg viewBox="0 0 24 24" class="size-5 sm:size-6" fill="currentColor"><path d="M3 3h5l4 9 4-9h5l-7 15v3h-4v-3L3 3z"/></svg>
+      </span>
+      <span class="font-display text-xl leading-none tracking-wide whitespace-nowrap sm:text-3xl">
+        The Dev Saga<span class="align-super text-xs">*</span>
+      </span>
+    </a>
+    <nav aria-label="Sections" class="flex min-w-0 items-center">
+      <ul class="flex items-center gap-1.5 overflow-x-auto py-2 sm:gap-2">
+        {
+          links.map((l) => (
+            <li>
+              <a
+                href={`${base}${l.href}`}
+                class="caption-box block whitespace-nowrap bg-paper px-2 py-1 text-[10px] font-semibold text-ink transition-colors hover:bg-ink hover:text-paper sm:px-2.5 sm:text-xs"
+              >
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <div class="flex shrink-0 items-center gap-1.5 sm:gap-2">
+      <a
+        href={switchHref}
+        hreflang={onId ? "en" : "id"}
+        aria-label={t.nav.langSwitch}
+        title={t.nav.langSwitch}
+        class="caption-box flex items-center gap-1 bg-paper px-2 py-1.5 text-[10px] font-semibold text-ink transition-colors hover:bg-ink hover:text-paper sm:text-xs"
+      >
+        <svg viewBox="0 0 24 24" class="size-3.5 fill-none stroke-current stroke-[2.2px]" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z"></path>
+        </svg>
+        {switchLabel}
+      </a>
+      <button
+        id="donate-open"
+        type="button"
+        aria-haspopup="dialog"
+        class="inline-flex items-center gap-1.5 border-[3px] border-paper bg-paper px-2.5 py-1.5 font-display text-sm tracking-wider text-ink uppercase shadow-[3px_3px_0_0_var(--color-paper)] transition-transform duration-150 hover:-translate-y-0.5 sm:text-base"
+      >
+        <svg viewBox="0 0 24 24" class="size-3.5 fill-none stroke-current stroke-[2.5px]" aria-hidden="true">
+          <path d="M4 9h12v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V9zM16 10h2a2.5 2.5 0 0 1 0 5h-2M7 5.5v.5M11 4v2" stroke-linecap="round"></path>
+        </svg>
+        {t.nav.donate}
+      </button>
+    </div>
+  </div>
+  <div class="h-1 w-full bg-paper/20" aria-hidden="true">
+    <div id="progress-ink" class="halftone h-full w-0 bg-paper [background-size:6px_6px]"></div>
+  </div>
+</header>
+
+<!-- donate popup -->
+<dialog
+  id="donate-dialog"
+  aria-labelledby="donate-title"
+  class="m-auto w-[min(24rem,calc(100vw-2rem))] border-[3px] border-ink bg-panel p-0 text-ink shadow-ink-lg backdrop:bg-ink/60"
+>
+  <div class="relative p-6 text-center sm:p-8">
+    <button
+      id="donate-close-x"
+      type="button"
+      aria-label="Close donation popup"
+      class="absolute top-3 right-3 grid size-9 place-items-center border-[2.5px] border-ink bg-panel transition-colors hover:bg-ink hover:text-paper"
+    >
+      <svg viewBox="0 0 24 24" class="size-4 fill-none stroke-current stroke-[3px]" aria-hidden="true">
+        <path d="M5 5l14 14M19 5L5 19" stroke-linecap="round"></path>
+      </svg>
+    </button>
+    <span class="caption-box inline-block -rotate-2 bg-ink px-2.5 py-1 text-[11px] font-semibold text-paper">{t.donate.stamp}</span>
+    <h2 id="donate-title" class="mt-3 font-display text-4xl leading-none tracking-wide">{t.donate.title}</h2>
+    <p class="mx-auto mt-3 max-w-[30ch] text-sm leading-snug text-ink/80">{t.donate.text}</p>
+    <img
+      src="/qris-dana.png"
+      alt="QRIS Dana QR code for donation"
+      width="900"
+      height="904"
+      loading="lazy"
+      class="mx-auto mt-5 w-56 border-[3px] border-ink bg-white p-1.5 shadow-ink sm:w-64"
+    />
+    <p class="caption-box mt-4 inline-block bg-paper px-3 py-1 text-xs font-semibold">{t.donate.scan}</p>
+    <button id="donate-close" type="button" class="btn-ink-solid mt-5 w-full px-5 py-2.5 text-lg">{t.donate.close}</button>
+  </div>
+</dialog>
+
+<script>
+  const dlg = document.getElementById("donate-dialog") as HTMLDialogElement | null;
+  document.getElementById("donate-open")?.addEventListener("click", () => dlg?.showModal());
+  document.getElementById("donate-close")?.addEventListener("click", () => dlg?.close());
+  document.getElementById("donate-close-x")?.addEventListener("click", () => dlg?.close());
+  // click on the backdrop (outside the inner panel) closes too
+  dlg?.addEventListener("click", (e) => {
+    if (e.target === dlg) dlg?.close();
+  });
+</script>

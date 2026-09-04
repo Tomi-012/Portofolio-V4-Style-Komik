@@ -1,0 +1,535 @@
+---
+import { type Locale } from "../i18n/ui";
+
+interface Props {
+  locale?: Locale;
+}
+const { locale = "en" } = Astro.props;
+const isId = locale === "id";
+---
+
+<div id="pixel-pals-root" class="pointer-events-none fixed inset-0 z-50 overflow-hidden" data-locale={locale}>
+  <div id="pal-bubbles" class="pointer-events-none absolute inset-0"></div>
+
+  <div
+    id="pal-roster"
+    class="pointer-events-auto fixed bottom-3 right-3 z-50 flex max-w-[60vw] items-center gap-1.5 border-[2.5px] border-ink bg-panel p-1.5 shadow-ink-sm sm:max-w-[44vw]"
+  >
+    <button
+      id="pal-roster-tab"
+      type="button"
+      title={isId ? "Buka/tutup daftar karakter" : "Show/hide character list"}
+      class="flex shrink-0 items-center gap-1 border-2 border-ink bg-ink px-1.5 py-0.5 font-display text-xs tracking-wider text-paper transition-transform hover:-translate-y-0.5"
+    >
+      <svg viewBox="0 0 24 24" class="size-3.5 fill-current" aria-hidden="true">
+        <path d="M12 1l2.6 6.9L22 9l-5.4 4.8L18.2 22 12 17.8 5.8 22l1.6-8.2L2 9l7.4-1.1z" />
+      </svg>
+      PALS
+    </button>
+    <div id="pal-roster-body" class="hidden items-center gap-1.5">
+      <div id="pal-toggles" class="flex items-center gap-1 overflow-x-auto [scrollbar-width:thin]"></div>
+      <button
+        id="pal-reset-all"
+        type="button"
+        title={isId ? "Pulangkan semua ke bawah layar" : "Send all pals home to the bottom"}
+        class="shrink-0 border-2 border-ink bg-paper px-1.5 py-0.5 font-display text-xs text-ink transition-colors hover:bg-ink hover:text-paper"
+      >
+        {isId ? "PULANG" : "HOME"}
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { ART_W, ART_H, FEET_Y, HAND_Y, CHARACTERS, renderFrame, type CharacterDef } from "../components/pals/art";
+  import { getDialogue } from "../components/pals/dialogue";
+
+  const root = document.getElementById("pixel-pals-root");
+  if (root) {
+    const locale = root.dataset.locale === "id" ? "id" : "en";
+    const isId = locale === "id";
+    const bubblesContainer = document.getElementById("pal-bubbles")!;
+    const togglesContainer = document.getElementById("pal-toggles")!;
+    const resetBtn = document.getElementById("pal-reset-all")!;
+    const rosterTab = document.getElementById("pal-roster-tab")!;
+    const rosterBody = document.getElementById("pal-roster-body")!;
+
+    // roster card: starts collapsed, toggles open/closed, persists per visitor
+    let rosterOpen = localStorage.getItem("pal-roster-open") === "1";
+    const applyRoster = () => {
+      rosterBody.classList.toggle("hidden", !rosterOpen);
+      rosterBody.classList.toggle("flex", rosterOpen);
+      localStorage.setItem("pal-roster-open", rosterOpen ? "1" : "0");
+    };
+    applyRoster();
+    rosterTab.addEventListener("click", () => {
+      rosterOpen = !rosterOpen;
+      applyRoster();
+    });
+
+    const getScale = () => (window.innerWidth < 768 ? 1.5 : 2);
+    let SCALE = getScale();
+
+    type Mode = "walk" | "idle" | "held" | "fall" | "stand" | "hang" | "wallLeft" | "wallRight" | "battle";
+    let activeBattles = 0;
+    const MAX_BATTLE_CHARS = 6;
+
+    const surfaceSel = "main section, main article, main figure, main form, main .panel-ink, main .work-panel";
+
+    class PalInstance {
+      def: CharacterDef;
+      cv: HTMLCanvasElement;
+      active = true;
+      mode: Mode = "walk";
+      x = 0;
+      y = 0;
+      dir: 1 | -1 = 1;
+      facing: 1 | -1 = 1;
+      vy = 0;
+      frame = 0;
+      lastFrameAt = 0;
+      anchor: { el: Element; kind: "stand" | "hang" | "wallLeft" | "wallRight"; offset: number } | null = null;
+      battleUntil = 0;
+      battleCooldown = 0;
+      battleCounted = false;
+      bubbleEl: HTMLDivElement | null = null;
+
+      dragging = false;
+      moved = false;
+      grabDX = 0;
+      grabDY = 0;
+
+      constructor(def: CharacterDef) {
+        this.def = def;
+        this.dir = def.startDir;
+        this.facing = def.startDir;
+
+        this.cv = document.createElement("canvas");
+        this.cv.className = "pointer-events-auto fixed left-0 top-0 z-50 cursor-grab touch-none select-none active:cursor-grabbing";
+        this.cv.tabIndex = 0;
+        this.cv.setAttribute("role", "img");
+        this.cv.setAttribute("aria-label", `${def.name} (${def.title})`);
+        this.cv.title = `${def.name} — ${isId ? "geser! klik 2x untuk pulang" : "drag me! double-click to go home"}`;
+
+        this.updateCanvasSize();
+        root!.appendChild(this.cv);
+
+        this.x = Math.min(Math.max(16, window.innerWidth * def.startXFrac), window.innerWidth - this.cv.width - 16);
+        this.y = window.innerHeight - FEET_Y * SCALE;
+
+        this.setupEvents();
+      }
+
+      updateCanvasSize() {
+        this.cv.width = Math.round(ART_W * SCALE);
+        this.cv.height = Math.round(ART_H * SCALE);
+      }
+
+      setMode(m: Mode) {
+        // battle counter accounting: enter/exit "battle" adjusts the count
+        if (m === "battle" && this.mode !== "battle") {
+          this.battleCounted = true;
+          activeBattles++;
+        } else if (m !== "battle" && this.mode === "battle" && this.battleCounted) {
+          this.battleCounted = false;
+          activeBattles = Math.max(0, activeBattles - 1);
+        }
+        this.mode = m;
+        this.cv.style.cursor = m === "held" ? "grabbing" : "grab";
+      }
+
+      feetY() { return this.y + FEET_Y * SCALE; }
+      handY() { return this.y + HAND_Y * SCALE; }
+      centerX() { return this.x + this.cv.width / 2; }
+      centerY() { return this.y + this.cv.height / 2; }
+
+      draw() {
+        renderFrame(this.cv, this.def, this.mode === "fall" ? "walk" : this.poseName(), frameFix(this.mode, this.frame), this.facing === -1);
+      }
+
+      poseName(): string {
+        switch (this.mode) {
+          case "hang": case "held": return "hang";
+          case "battle": return "battle";
+          case "wallLeft": case "wallRight": return "wall";
+          case "stand": case "idle": return "idle";
+          default: return "walk";
+        }
+      }
+
+      stickToAnchor() {
+        if (!this.anchor) return;
+        const r = this.anchor.el.getBoundingClientRect();
+        if (this.anchor.kind === "stand") {
+          this.y = r.top - FEET_Y * SCALE;
+          this.x = Math.min(Math.max(4, r.left + this.anchor.offset - this.cv.width / 2), window.innerWidth - this.cv.width - 4);
+        } else if (this.anchor.kind === "hang") {
+          this.y = r.bottom - HAND_Y * SCALE;
+          this.x = Math.min(Math.max(4, r.left + this.anchor.offset - this.cv.width / 2), window.innerWidth - this.cv.width - 4);
+        } else if (this.anchor.kind === "wallLeft") {
+          // body fully outside (left of) the panel, hand tips on the wall — clamped so nothing goes off-screen
+          this.x = Math.min(Math.max(4, r.left - 14 * SCALE), window.innerWidth - this.cv.width - 4);
+          this.y = Math.min(Math.max(4, r.top + this.anchor.offset - this.cv.height / 2), window.innerHeight - this.cv.height - 4);
+        } else if (this.anchor.kind === "wallRight") {
+          // mirrored: panel to the LEFT, body outside to the right
+          this.x = Math.min(Math.max(4, r.right - 15 * SCALE), window.innerWidth - this.cv.width - 4);
+          this.y = Math.min(Math.max(4, r.top + this.anchor.offset - this.cv.height / 2), window.innerHeight - this.cv.height - 4);
+        }
+      }
+
+      findSurfaceSnaps() {
+        const cx = this.centerX();
+        const cy = this.centerY();
+        const fy = this.feetY();
+        const hy = this.handY();
+        let best: { el: Element; kind: "stand" | "hang" | "wallLeft" | "wallRight"; offset: number; dist: number } | null = null;
+
+        for (const el of document.querySelectorAll(surfaceSel)) {
+          const r = el.getBoundingClientRect();
+          if (r.height < 48 || r.width < 64) continue;
+          if (r.bottom < -50 || r.top > window.innerHeight + 50) continue;
+
+          if (cx >= r.left - 16 && cx <= r.right + 16) {
+            const hDist = Math.abs(hy - r.bottom);
+            if (hDist <= 42 && (!best || hDist < best.dist)) best = { el, kind: "hang", offset: cx - r.left, dist: hDist };
+            const sDist = Math.abs(fy - r.top);
+            if (sDist <= 32 && (!best || sDist < best.dist)) best = { el, kind: "stand", offset: cx - r.left, dist: sDist };
+          }
+          if (cy >= r.top - 16 && cy <= r.bottom + 16) {
+            const wlDist = Math.abs(cx - r.left);
+            if (wlDist <= 36 && (!best || wlDist < best.dist)) best = { el, kind: "wallLeft", offset: cy - r.top, dist: wlDist };
+            const wrDist = Math.abs(cx - r.right);
+            if (wrDist <= 36 && (!best || wrDist < best.dist)) best = { el, kind: "wallRight", offset: cy - r.top, dist: wrDist };
+          }
+        }
+        return best;
+      }
+
+      fallLanding() {
+        const cx = this.centerX();
+        const fy = this.feetY();
+        let surfaceY = window.innerHeight;
+        let el: Element | null = null;
+        for (const candidate of document.querySelectorAll(surfaceSel)) {
+          const r = candidate.getBoundingClientRect();
+          if (r.height < 48 || r.width < 64) continue;
+          if (cx < r.left + 6 || cx > r.right - 6) continue;
+          if (r.top >= fy - 8 && r.top <= window.innerHeight && r.top < surfaceY) {
+            surfaceY = r.top;
+            el = candidate;
+          }
+        }
+        return { surfaceY, el };
+      }
+
+      drop() {
+        const snap = this.findSurfaceSnaps();
+        if (snap) {
+          this.anchor = { el: snap.el, kind: snap.kind, offset: snap.offset };
+          this.stickToAnchor();
+          if (snap.kind === "hang") this.setMode("hang");
+          else if (snap.kind === "wallLeft") { this.setMode("wallLeft"); this.facing = 1; }
+          else if (snap.kind === "wallRight") { this.setMode("wallRight"); this.facing = -1; }
+          else this.setMode("idle");
+          this.draw();
+          return;
+        }
+        this.startFall();
+      }
+
+      startFall() {
+        this.anchor = null;
+        this.vy = 0;
+        this.removeBubble();
+        this.setMode("fall");
+      }
+
+      land() {
+        this.y = window.innerHeight - FEET_Y * SCALE;
+        this.vy = 0;
+        this.anchor = null;
+        this.setMode("walk");
+      }
+
+      showBubble(text: string) {
+        this.removeBubble();
+        const b = document.createElement("div");
+        const isRightFacing = this.facing === 1;
+        b.className = "pointer-events-none fixed z-50 max-w-[90px] border-2 border-ink bg-panel p-1 shadow-ink-sm sm:max-w-[105px]";
+        b.innerHTML = `
+          <div class="mb-0.5 font-caption text-[8px] font-bold tracking-wider text-ink/70 uppercase">${this.def.name}</div>
+          <div class="font-body text-[9px] font-semibold leading-tight text-ink">${text}</div>
+          <div class="absolute -bottom-[6px] ${isRightFacing ? "right-4" : "left-4"} size-2 rotate-45 border-b-2 border-r-2 border-ink bg-panel"></div>
+        `;
+        bubblesContainer.appendChild(b);
+        this.bubbleEl = b;
+        this.updateBubblePos();
+      }
+
+      updateBubblePos() {
+        if (!this.bubbleEl) return;
+        const isRightFacing = this.facing === 1;
+        const shiftX = isRightFacing ? -90 : 24;
+        const bx = this.centerX() + shiftX;
+        this.bubbleEl.style.left = `${Math.round(Math.max(8, Math.min(window.innerWidth - 145, bx)))}px`;
+        this.bubbleEl.style.bottom = `${Math.round(window.innerHeight - (this.y - 12))}px`;
+      }
+
+      removeBubble() {
+        if (this.bubbleEl) {
+          this.bubbleEl.remove();
+          this.bubbleEl = null;
+        }
+      }
+
+      setupEvents() {
+        this.cv.addEventListener("pointerdown", (e) => {
+          e.preventDefault();
+          this.dragging = true;
+          this.moved = false;
+          this.grabDX = e.clientX - this.x;
+          this.grabDY = e.clientY - this.y;
+          this.anchor = null;
+          this.removeBubble();
+          this.setMode("held");
+          this.cv.setPointerCapture(e.pointerId);
+        });
+        this.cv.addEventListener("pointermove", (e) => {
+          if (!this.dragging) return;
+          this.moved = true;
+          this.x = Math.min(Math.max(0, e.clientX - this.grabDX), window.innerWidth - this.cv.width);
+          this.y = Math.min(Math.max(0, e.clientY - this.grabDY), window.innerHeight - this.cv.height / 2);
+          this.updateBubblePos();
+        });
+        this.cv.addEventListener("pointerup", () => {
+          if (!this.dragging) return;
+          this.dragging = false;
+          if (this.moved) this.drop();
+          else {
+            this.y = Math.min(this.y, window.innerHeight - FEET_Y * SCALE);
+            this.setMode("walk");
+          }
+        });
+        this.cv.addEventListener("dblclick", () => this.startFall());
+        this.cv.addEventListener("keydown", (e) => {
+          const step = 40;
+          let used = true;
+          if (e.key === "ArrowLeft") { this.x = Math.max(4, this.x - step); this.facing = -1; }
+          else if (e.key === "ArrowRight") { this.x = Math.min(window.innerWidth - this.cv.width - 4, this.x + step); this.facing = 1; }
+          else if (e.key === "ArrowUp") { this.y = Math.max(0, this.y - step); }
+          else if (e.key === "ArrowDown") { this.y = Math.min(window.innerHeight - FEET_Y * SCALE, this.y + step); }
+          else if (e.key === "Enter" || e.key === "Home") { this.startFall(); }
+          else used = false;
+          if (used) {
+            e.preventDefault();
+            this.anchor = null;
+            this.startFall();
+          }
+        });
+      }
+
+      update(now: number, dt: number, reduced: boolean) {
+        if (!this.active) {
+          if (this.cv.style.display !== "none") {
+            this.cv.style.display = "none";
+            this.removeBubble();
+                      }
+          return;
+        }
+        this.cv.style.display = "block";
+
+        if (this.mode === "battle") {
+          if (now >= this.battleUntil) {
+            this.removeBubble();
+                        this.dir = (this.facing === 1 ? -1 : 1);
+            this.facing = this.dir;
+            this.battleCooldown = now + 10000;
+            this.setMode("walk");
+          } else {
+            if (now - this.lastFrameAt > 200) {
+              this.frame = (this.frame + 1) % 4;
+              this.lastFrameAt = now;
+            }
+            this.draw();
+            this.updateBubblePos();
+            this.cv.style.transform = `translate(${Math.round(this.x)}px, ${Math.round(this.y)}px)`;
+            return;
+          }
+        }
+
+        if (this.mode === "walk" && !reduced) {
+          this.x += this.dir * this.def.speed * dt;
+          const maxX = window.innerWidth - this.cv.width - 4;
+          if (this.x >= maxX) { this.x = maxX; this.dir = -1; }
+          if (this.x <= 4) { this.x = 4; this.dir = 1; }
+          this.facing = this.dir;
+          this.y = window.innerHeight - FEET_Y * SCALE;
+          if (now - this.lastFrameAt > 140) {
+            this.frame = (this.frame + 1) % 4;
+            this.lastFrameAt = now;
+          }
+        } else if (this.mode === "idle" || this.mode === "stand") {
+          if (!reduced && now - this.lastFrameAt > 520) {
+            this.frame = (this.frame + 1) % 2;
+            this.lastFrameAt = now;
+          }
+        } else if (this.mode === "hang" || this.mode === "held" || this.mode === "wallLeft" || this.mode === "wallRight") {
+          if (!reduced && now - this.lastFrameAt > 340) {
+            this.frame = (this.frame + 1) % 2;
+            this.lastFrameAt = now;
+          }
+        } else if (this.mode === "fall") {
+          this.vy += 2200 * dt;
+          this.y += this.vy * dt;
+          const landing = this.fallLanding();
+          if (this.y + FEET_Y * SCALE >= landing.surfaceY) {
+            this.y = landing.surfaceY - FEET_Y * SCALE;
+            if (landing.el) {
+              const r = landing.el.getBoundingClientRect();
+              this.anchor = { el: landing.el, kind: "stand", offset: this.centerX() - r.left };
+              this.setMode("idle");
+            } else {
+              this.land();
+            }
+          }
+        }
+
+        this.draw();
+        this.cv.style.transform = `translate(${Math.round(this.x)}px, ${Math.round(this.y)}px)`;
+        this.updateBubblePos();
+      }
+    }
+
+    // frame naming helper (walk cycles use 4 frames, others 2)
+    function frameFix(mode: Mode, frame: number): number {
+      if (mode === "walk" || mode === "fall") return frame % 4;
+      return frame % 2;
+    }
+
+    // =======================================================================
+    // MANAGER
+    // =======================================================================
+    const pals: PalInstance[] = [];
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const mobileRoster = ["naruto", "sasuke", "luffy", "rem"];
+    const isSmallNow = window.innerWidth < 1024;
+
+    CHARACTERS.forEach((def, idx) => {
+      const pal = new PalInstance(def);
+      pal.active = isSmallNow ? mobileRoster.includes(def.id) && idx < 6 : true;
+      pals.push(pal);
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = def.name;
+      btn.title = `${def.title}`;
+      btn.className = `shrink-0 border px-1 py-0.5 font-caption text-[10px] font-bold uppercase transition-colors ${
+        pal.active ? "border-ink bg-ink text-paper" : "border-ink/50 bg-paper text-ink/60"
+      }`;
+      btn.addEventListener("click", () => {
+        pal.active = !pal.active;
+        if (pal.active) {
+          pal.x = Math.min(Math.max(20, Math.random() * (window.innerWidth - 90)), window.innerWidth - 90);
+          pal.startFall();
+        } else {
+          pal.removeBubble();
+                  }
+        btn.className = `shrink-0 border px-1 py-0.5 font-caption text-[10px] font-bold uppercase transition-colors ${
+          pal.active ? "border-ink bg-ink text-paper" : "border-ink/50 bg-paper text-ink/60"
+        }`;
+      });
+      togglesContainer.appendChild(btn);
+    });
+
+    resetBtn.addEventListener("click", () => {
+      pals.forEach((p) => {
+        p.active = true;
+        p.startFall();
+      });
+      const btns = Array.from(togglesContainer.children) as HTMLButtonElement[];
+      btns.forEach((b) => {
+        b.className = "shrink-0 border border-ink bg-ink px-1 py-0.5 font-caption text-[10px] font-bold uppercase text-paper transition-colors";
+      });
+    });
+
+    function checkEncounters(now: number) {
+      if (reduced) return;
+      if (activeBattles >= MAX_BATTLE_CHARS) return;
+      for (let i = 0; i < pals.length; i++) {
+        const p1 = pals[i];
+        if (!p1.active || p1.mode !== "walk" || now < p1.battleCooldown) continue;
+        for (let j = i + 1; j < pals.length; j++) {
+          const p2 = pals[j];
+          if (!p2.active || p2.mode !== "walk" || now < p2.battleCooldown) continue;
+          const dist = Math.abs(p1.centerX() - p2.centerX());
+          const yDist = Math.abs(p1.feetY() - p2.feetY());
+          if (dist < 46 && yDist < 16) {
+            p1.setMode("battle");
+            p2.setMode("battle");
+            p1.battleUntil = now + 3600;
+            p2.battleUntil = now + 3600;
+            p1.facing = p1.x < p2.x ? 1 : -1;
+            p2.facing = (-p1.facing) as 1 | -1;
+            const diag = getDialogue(p1.def.id, p2.def.id, locale);
+            p1.showBubble(diag.textA);
+            p2.showBubble(diag.textB);
+            return;
+          }
+        }
+      }
+    }
+
+    let lastT = performance.now();
+    function masterLoop(now: number) {
+      const dt = Math.min(0.05, (now - lastT) / 1000);
+      lastT = now;
+      pals.forEach((p) => p.update(now, dt, reduced));
+      checkEncounters(now);
+      requestAnimationFrame(masterLoop);
+    }
+    requestAnimationFrame(masterLoop);
+
+    let scrollTick = false;
+    window.addEventListener("scroll", () => {
+      if (scrollTick) return;
+      scrollTick = true;
+      requestAnimationFrame(() => {
+        pals.forEach((p) => p.stickToAnchor());
+        scrollTick = false;
+      });
+    }, { passive: true });
+
+    window.addEventListener("resize", () => {
+      SCALE = getScale();
+      pals.forEach((p) => {
+        p.updateCanvasSize();
+        p.stickToAnchor();
+        if (!p.anchor) p.y = Math.min(p.y, window.innerHeight - FEET_Y * SCALE);
+      });
+    });
+
+    // debug hook
+    (window as unknown as Record<string, unknown>).__pals = {
+      pals,
+      get activeBattles() { return activeBattles; },
+      renderDebug: (id: string, pose: string, f: number) => {
+        const p = pals.find((x) => x.def.id === id);
+        if (p) renderFrame(p.cv, p.def, pose, f, false);
+      },
+      triggerEncounter: (idA: string, idB: string) => {
+        const p1 = pals.find((p) => p.def.id === idA);
+        const p2 = pals.find((p) => p.def.id === idB);
+        if (p1 && p2) {
+          p1.active = true;
+          p2.active = true;
+          p1.cv.style.display = "block";
+          p2.cv.style.display = "block";
+          p1.x = 300; p2.x = 330;
+          p1.land(); p2.land();
+          checkEncounters(performance.now() + 20000);
+        }
+      },
+    };
+  }
+</script>

@@ -1,0 +1,71 @@
+---
+interface Props {
+  text: string;
+  size?: number;
+  tilt?: number;
+  solid?: boolean;
+  backdrop?: boolean;
+  pop?: boolean;
+  delay?: number;
+  class?: string;
+}
+
+const {
+  text,
+  size = 220,
+  tilt = -8,
+  solid = false,
+  backdrop = false,
+  pop = false,
+  delay = 0,
+  class: className = "",
+} = Astro.props;
+
+function starPoints(spikes = 14, outer = 49, inner = 32) {
+  const pts: string[] = [];
+  for (let i = 0; i < spikes * 2; i++) {
+    const jitter = 0.82 + ((i * 37) % 17) / 55;
+    const r = i % 2 === 0 ? outer : inner * jitter;
+    const a = (Math.PI * i) / spikes - Math.PI / 2;
+    pts.push(`${(50 + r * Math.cos(a)).toFixed(1)},${(50 + r * Math.sin(a)).toFixed(1)}`);
+  }
+  return pts.join(" ");
+}
+
+const fontSize = text.length >= 7 ? 15 : text.length >= 5 ? 19 : text.length >= 3 ? 23 : 28;
+---
+
+<div
+  class:list={["pointer-events-none absolute select-none", pop && "sfx-pop", className]}
+  style={`width:${size}px; --tilt:${tilt}deg; --reveal-delay:${delay}ms; rotate:${tilt}deg;`}
+  aria-hidden="true"
+>
+  {
+    backdrop && (
+      <div
+        class="burst burst-spin absolute -inset-[18%] text-ink opacity-25"
+        style="mask-image: radial-gradient(circle at center, black 30%, transparent 72%); -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 72%);"
+      />
+    )
+  }
+  <svg viewBox="0 0 100 100" class="relative w-full">
+    <polygon
+      points={starPoints()}
+      fill={solid ? "var(--color-ink)" : "var(--color-panel)"}
+      stroke="var(--color-ink)"
+      stroke-width="2.5"
+      stroke-linejoin="round"
+    />
+    <text
+      x="50"
+      y={fontSize >= 23 ? "59" : "57"}
+      text-anchor="middle"
+      font-family="Bangers, sans-serif"
+      font-size={fontSize}
+      letter-spacing="0.5"
+      fill={solid ? "var(--color-paper)" : "var(--color-ink)"}
+    >
+      {text}
+    </text>
+  </svg>
+</div>

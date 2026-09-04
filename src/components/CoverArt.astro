@@ -1,0 +1,115 @@
+---
+interface Props {
+  variant: "bolt" | "robot" | "ghost" | "chart" | "shield" | "planet";
+  id: string;
+  class?: string;
+}
+const { variant, id, class: className = "" } = Astro.props;
+const ht = `ht-${id}`;
+---
+
+<svg viewBox="0 0 200 150" class={className} aria-hidden="true">
+  <defs>
+    <pattern id={ht} width="8" height="8" patternUnits="userSpaceOnUse">
+      <circle cx="2.6" cy="2.6" r="1.7" fill="var(--color-ink)" />
+    </pattern>
+  </defs>
+
+  {
+    variant === "bolt" && (
+      <>
+        <circle cx="100" cy="78" r="52" fill={`url(#${ht})`} opacity="0.5" />
+        <circle cx="100" cy="78" r="52" fill="none" stroke="var(--color-ink)" stroke-width="4" />
+        <path
+          d="M112 22 L74 84 L98 84 L86 134 L132 66 L106 66 Z"
+          fill="var(--color-ink)"
+          stroke="var(--color-ink)"
+          stroke-width="4"
+          stroke-linejoin="round"
+        />
+        <path d="M18 30 h28 M10 52 h20 M158 116 h30 M164 96 h18" stroke="var(--color-ink)" stroke-width="4" stroke-linecap="round" />
+      </>
+    )
+  }
+
+  {
+    variant === "robot" && (
+      <>
+        <rect x="56" y="34" width="88" height="76" rx="10" fill="var(--color-panel)" stroke="var(--color-ink)" stroke-width="5" />
+        <path d="M100 34 V14 M92 14 h16" stroke="var(--color-ink)" stroke-width="5" stroke-linecap="round" />
+        <circle cx="100" cy="12" r="6" fill="var(--color-ink)" />
+        <rect x="70" y="54" width="24" height="16" rx="4" fill="var(--color-ink)" />
+        <rect x="106" y="54" width="24" height="16" rx="4" fill="var(--color-ink)" />
+        <path d="M78 90 h44" stroke="var(--color-ink)" stroke-width="5" stroke-linecap="round" />
+        <path d="M84 90 v0 M94 90 v0 M104 90 v0 M114 90 v0" stroke="var(--color-panel)" stroke-width="2.5" />
+        <path d="M56 74 H40 M144 74 h16" stroke="var(--color-ink)" stroke-width="5" stroke-linecap="round" />
+        <path d="M24 118 h152" stroke="var(--color-ink)" stroke-width="4" stroke-linecap="round" />
+        <path d="M40 132 h120" stroke="var(--color-ink)" stroke-width="4" stroke-linecap="round" opacity="0.4" />
+      </>
+    )
+  }
+
+  {
+    variant === "ghost" && (
+      <>
+        <path d="M20 118 L60 96 L100 118 L140 96 L180 118" fill="none" stroke="var(--color-ink)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.5" />
+        <path
+          d="M62 96 Q62 38 100 38 Q138 38 138 96 L138 128 L124 114 L112 128 L100 114 L88 128 L76 114 L62 128 Z"
+          fill="var(--color-panel)"
+          stroke="var(--color-ink)"
+          stroke-width="5"
+          stroke-linejoin="round"
+        />
+        <circle cx="86" cy="74" r="8" fill="var(--color-ink)" />
+        <circle cx="116" cy="74" r="8" fill="var(--color-ink)" />
+        <path d="M94 92 Q101 99 108 92" fill="none" stroke="var(--color-ink)" stroke-width="4" stroke-linecap="round" />
+        <path d="M150 40 h22 M158 56 h26" stroke="var(--color-ink)" stroke-width="4" stroke-linecap="round" />
+      </>
+    )
+  }
+
+  {
+    variant === "chart" && (
+      <>
+        <path d="M34 18 V124 H176" fill="none" stroke="var(--color-ink)" stroke-width="5" stroke-linecap="round" />
+        <rect x="52" y="86" width="22" height="38" fill={`url(#${ht})`} stroke="var(--color-ink)" stroke-width="4" />
+        <rect x="86" y="62" width="22" height="62" fill="var(--color-ink)" />
+        <rect x="120" y="38" width="22" height="86" fill={`url(#${ht})`} stroke="var(--color-ink)" stroke-width="4" />
+        <path d="M52 70 L88 46 L122 26 L156 14" fill="none" stroke="var(--color-ink)" stroke-width="4" stroke-linejoin="round" />
+        <path d="M148 10 L162 8 L156 22 Z" fill="var(--color-ink)" />
+      </>
+    )
+  }
+
+  {
+    variant === "shield" && (
+      <>
+        <path
+          d="M100 16 L156 34 V80 Q156 116 100 138 Q44 116 44 80 V34 Z"
+          fill="var(--color-panel)"
+          stroke="var(--color-ink)"
+          stroke-width="5"
+          stroke-linejoin="round"
+        />
+        <path d="M100 30 L142 43 V79 Q142 106 100 124 Q58 106 58 79 V43 Z" fill={`url(#${ht})`} opacity="0.55" />
+        <circle cx="100" cy="70" r="14" fill="none" stroke="var(--color-ink)" stroke-width="5" />
+        <path d="M100 84 V104" stroke="var(--color-ink)" stroke-width="6" stroke-linecap="round" />
+        <path d="M22 60 h14 M164 60 h14 M30 92 h12 M158 92 h12" stroke="var(--color-ink)" stroke-width="4" stroke-linecap="round" />
+      </>
+    )
+  }
+
+  {
+    variant === "planet" && (
+      <>
+        <circle cx="100" cy="75" r="40" fill={`url(#${ht})`} stroke="var(--color-ink)" stroke-width="5" />
+        <path d="M64 60 Q100 44 136 60" fill="none" stroke="var(--color-ink)" stroke-width="4" />
+        <path d="M60 92 Q100 110 140 92" fill="none" stroke="var(--color-ink)" stroke-width="4" />
+        <ellipse cx="100" cy="75" rx="66" ry="18" fill="none" stroke="var(--color-ink)" stroke-width="4" transform="rotate(-14 100 75)" />
+        <circle cx="168" cy="34" r="6" fill="var(--color-ink)" />
+        <circle cx="34" cy="118" r="4" fill="var(--color-ink)" />
+        <path d="M28 34 l10 0 M33 29 l0 10" stroke="var(--color-ink)" stroke-width="3" stroke-linecap="round" />
+      </>
+    )
+  }
+</svg>

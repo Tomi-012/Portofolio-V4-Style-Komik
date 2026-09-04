@@ -1,0 +1,93 @@
+---
+import SectionHead from "./SectionHead.astro";
+import { getDict, type Locale } from "../i18n/ui";
+
+interface Props {
+  locale?: Locale;
+}
+const { locale = "en" } = Astro.props;
+const t = getDict(locale);
+
+const powers = [
+  { name: "HTML & CSS", level: 9 },
+  { name: "JavaScript / TypeScript", level: 9 },
+  { name: "React & Next.js", level: 8 },
+  { name: "Vue & Nuxt", level: 7 },
+  { name: "Node.js & APIs", level: 7 },
+  { name: "Astro & SSG", level: 9 },
+];
+
+const belt = ["Git", "Vite", "Vitest", "Tailwind", "Figma", "Docker", "PostgreSQL", "Vercel"];
+---
+
+<section id="powers" class="px-4 pt-16 sm:px-6 sm:pt-24">
+  <div class="mx-auto max-w-7xl">
+    <SectionHead chapter={t.powers.chapter} title={t.powers.title} note={t.powers.note} />
+
+    <div class="grid gap-8 lg:grid-cols-2 lg:gap-10">
+      <!-- power grid -->
+      <div class="reveal relative border-[3px] border-ink bg-panel p-6 shadow-ink sm:p-8">
+        <h3 class="font-display text-3xl tracking-wide">{t.powers.gridTitle}</h3>
+        <div class="halftone mt-1 h-[3px] w-24 bg-ink" aria-hidden="true"></div>
+        <ul class="mt-6 space-y-5">
+          {
+            powers.map((s, i) => (
+              <li style={`--reveal-delay:${i * 70}ms`}>
+                <div class="mb-1.5 flex items-baseline justify-between gap-4">
+                  <span class="font-caption text-sm font-semibold tracking-[0.12em] uppercase">{s.name}</span>
+                  <span class="font-display text-lg tracking-wider" aria-hidden="true">
+                    {s.level}/10
+                  </span>
+                </div>
+                <div class="flex gap-1" aria-hidden="true">
+                  {Array.from({ length: 10 }).map((_, c) => (
+                    <span
+                      class:list={[
+                        "h-4 flex-1 border-2 border-ink",
+                        c < s.level ? "bg-ink" : "bg-transparent border-ink/40",
+                      ]}
+                    />
+                  ))}
+                </div>
+                <span class="sr-only">{`${s.name}: ${s.level} out of 10`}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <!-- utility belt + special moves -->
+      <div class="flex flex-col gap-8">
+        <div class="reveal relative overflow-hidden border-[3px] border-ink bg-ink p-6 text-paper shadow-ink sm:p-8" style="--reveal-delay:120ms">
+          <div class="halftone pointer-events-none absolute -top-10 -right-10 size-48 text-paper opacity-10" aria-hidden="true"></div>
+          <h3 class="font-display text-3xl tracking-wide">{t.powers.beltTitle}</h3>
+          <ul class="mt-5 flex flex-wrap gap-2.5">
+            {
+              belt.map((tool) => (
+                <li class="border-[2.5px] border-paper px-3 py-1.5 font-caption text-xs font-semibold tracking-[0.16em] uppercase transition-colors hover:bg-paper hover:text-ink">
+                  {tool}
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <div class="reveal border-[3px] border-ink bg-panel p-6 shadow-ink sm:p-8" style="--reveal-delay:220ms">
+          <h3 class="font-display text-3xl tracking-wide">{t.powers.movesTitle}</h3>
+          <ul class="mt-5 space-y-3.5">
+            {
+              t.powers.moves.map((m) => (
+                <li class="flex items-start gap-3 text-base leading-snug text-ink/90">
+                  <svg viewBox="0 0 24 24" class="mt-0.5 size-5 shrink-0 fill-ink" aria-hidden="true">
+                    <path d="M12 1l2.6 6.9L22 9l-5.4 4.8L18.2 22 12 17.8 5.8 22l1.6-8.2L2 9l7.4-1.1z" />
+                  </svg>
+                  {m}
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

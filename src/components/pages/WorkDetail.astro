@@ -1,0 +1,112 @@
+---
+import CoverArt from "../CoverArt.astro";
+import Sfx from "../Sfx.astro";
+import { getDict, type Locale } from "../../i18n/ui";
+import { projects, type Project } from "../../data/projects";
+
+interface Props {
+  project: Project;
+  locale: Locale;
+}
+const { project: p, locale } = Astro.props;
+const t = getDict(locale);
+const pt = p.i18n[locale];
+
+const idx = projects.findIndex((x) => x.slug === p.slug);
+const prev = projects[(idx - 1 + projects.length) % projects.length];
+const next = projects[(idx + 1) % projects.length];
+
+const story = [
+  { tag: t.works.story[0], text: pt.challenge },
+  { tag: t.works.story[1], text: pt.move },
+  { tag: t.works.story[2], text: pt.outcome },
+];
+---
+
+<article class="px-4 pt-6 sm:px-6 sm:pt-10">
+  <div class="mx-auto max-w-7xl">
+    <a
+      href={locale === "id" ? "/id/#saga" : "/#saga"}
+      class="caption-box inline-flex items-center gap-2 bg-panel px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-ink hover:text-paper sm:text-sm"
+    >
+      <svg viewBox="0 0 24 24" class="size-4 fill-none stroke-current stroke-[3px]" aria-hidden="true">
+        <path d="M20 12H5M11 5l-7 7 7 7" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+      {t.works.backToSaga}
+    </a>
+
+    <!-- splash panel -->
+    <header class="panel-ink reveal mt-5 relative overflow-hidden">
+      <div class="halftone pointer-events-none absolute -top-10 -left-10 size-64 text-ink opacity-[0.12]" aria-hidden="true"></div>
+      <div class="grid items-center gap-8 p-6 sm:p-10 lg:grid-cols-[7fr_5fr] lg:p-14">
+        <div class="relative">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="caption-box bg-ink px-2.5 py-1 text-xs font-semibold text-paper">ISSUE #0{p.issue}</span>
+            <span class="caption-box bg-panel px-2.5 py-1 text-xs font-semibold">{p.year}</span>
+            <span class="caption-box bg-panel px-2.5 py-1 text-xs font-semibold">{t.saga.status[p.status]}</span>
+          </div>
+          <h1 class="mt-4 font-display text-[clamp(3.2rem,8vw,6.5rem)] leading-[0.88] tracking-wide rotate-[-1.5deg]">
+            {p.title}
+          </h1>
+          <p class="mt-5 max-w-xl text-lg leading-relaxed text-ink/85">{pt.tagline}</p>
+          <dl class="mt-6 flex flex-wrap gap-x-10 gap-y-4">
+            <div>
+              <dt class="font-caption text-xs font-semibold tracking-[0.18em] text-ink/60 uppercase">{t.works.role}</dt>
+              <dd class="font-display text-xl tracking-wide">{pt.role}</dd>
+            </div>
+            <div>
+              <dt class="font-caption text-xs font-semibold tracking-[0.18em] text-ink/60 uppercase">{t.works.weapons}</dt>
+              <dd class="font-display text-xl tracking-wide">{p.stack.join(" • ")}</dd>
+            </div>
+          </dl>
+        </div>
+        <div class="relative border-[3px] border-ink bg-paper p-6 shadow-ink sm:p-8">
+          <div class="halftone pointer-events-none absolute inset-0 text-ink opacity-[0.07]" aria-hidden="true"></div>
+          <CoverArt variant={p.cover} id={`detail-${p.slug}`} class="relative mx-auto w-full max-w-sm" />
+          <Sfx text={p.sfx} size={130} tilt={12} solid pop delay={350} class="top-2 right-2" />
+        </div>
+      </div>
+    </header>
+
+    <!-- story panels -->
+    <div class="mt-8 grid gap-5 md:grid-cols-3">
+      {
+        story.map((s, i) => (
+          <section
+            class:list={[
+              "reveal relative border-[3px] border-ink bg-panel p-6 shadow-ink",
+              i === 1 && "md:mt-6",
+              i === 2 && "md:mt-12",
+            ]}
+            style={`--reveal-delay:${i * 120}ms; --tilt:${i === 1 ? "0.8deg" : i === 2 ? "-0.9deg" : "0deg"};`}
+            aria-labelledby={`story-${i}`}
+          >
+            <h2 id={`story-${i}`} class="inline-block bg-ink px-2.5 py-1 font-display text-xl tracking-wider text-paper">
+              {s.tag}
+            </h2>
+            <p class="mt-4 leading-relaxed text-ink/90">{s.text}</p>
+            {i === 2 && (
+              <p class="caption-box mt-4 bg-panel px-2.5 py-1 text-[11px] font-medium text-ink/70">{pt.demoLabel}</p>
+            )}
+          </section>
+        ))
+      }
+    </div>
+
+    <!-- prev / next issues -->
+    <nav class="mt-10 grid gap-4 sm:grid-cols-2" aria-label="Issue navigation">
+      <a href={`${locale === "id" ? "/id" : ""}/works/${prev.slug}/`} class="work-panel group border-[3px] border-ink bg-panel p-5 shadow-ink">
+        <span class="font-caption text-xs font-semibold tracking-[0.18em] text-ink/60 uppercase">← {t.works.prev}</span>
+        <p class="mt-1 font-display text-3xl tracking-wide group-hover:underline">#0{prev.issue} {prev.title}</p>
+      </a>
+      <a href={`${locale === "id" ? "/id" : ""}/works/${next.slug}/`} class="work-panel group border-[3px] border-ink bg-panel p-5 text-right shadow-ink">
+        <span class="font-caption text-xs font-semibold tracking-[0.18em] text-ink/60 uppercase">{t.works.next} →</span>
+        <p class="mt-1 font-display text-3xl tracking-wide group-hover:underline">#0{next.issue} {next.title}</p>
+      </a>
+    </nav>
+
+    <div class="mt-10 mb-6 text-center">
+      <a href={locale === "id" ? "/id/#signal" : "/#signal"} class="btn-ink-solid px-7 py-3 text-xl hover:-translate-y-0.5 hover:shadow-ink">{t.works.hire}</a>
+    </div>
+  </div>
+</article>

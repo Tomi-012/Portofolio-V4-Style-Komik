@@ -1,0 +1,32 @@
+---
+interface Props {
+  chapter: string;
+  title: string;
+  note?: string;
+}
+const { chapter, title, note } = Astro.props;
+const digits = chapter.match(/\d+/)?.[0] ?? (/final/i.test(chapter) ? "FIN" : "★");
+---
+
+<div class="reveal relative mb-8 flex flex-wrap items-end justify-between gap-x-8 gap-y-4 sm:mb-12">
+  <span
+    class="pointer-events-none absolute -top-14 -left-2 -z-10 hidden font-display text-[11rem] leading-none tracking-wide text-transparent opacity-[0.09] select-none sm:block"
+    style="-webkit-text-stroke: 3px var(--color-ink); paint-order: stroke fill;"
+    aria-hidden="true">{digits}</span
+  >
+  <div class="relative flex items-center gap-4">
+    <span class="border-[3px] border-ink bg-ink px-3 py-1.5 font-display text-xl leading-none text-paper shadow-ink-sm">
+      {chapter}
+    </span>
+    <h2 class="font-display text-5xl leading-[0.95] tracking-wide sm:text-6xl lg:text-7xl">
+      {title}
+    </h2>
+  </div>
+  {
+    note && (
+      <p class="caption-box max-w-xs self-end bg-panel px-3 py-1.5 text-xs font-medium text-ink/80 sm:text-sm">
+        {note}
+      </p>
+    )
+  }
+</div>

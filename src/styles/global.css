@@ -1,0 +1,271 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #161616;
+  --color-smudge: #55524a;
+  --color-paper: #f4f2eb;
+  --color-panel: #fdfcf8;
+
+  --font-display: "Bangers", "Arial Narrow", sans-serif;
+  --font-caption: "Oswald", "Arial Narrow", sans-serif;
+  --font-body: "Archivo", Helvetica, Arial, sans-serif;
+
+  --shadow-ink-sm: 4px 4px 0 0 var(--color-ink);
+  --shadow-ink: 6px 6px 0 0 var(--color-ink);
+  --shadow-ink-lg: 10px 10px 0 0 var(--color-ink);
+  --ease-snap: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---------- comic material utilities ---------- */
+
+@utility halftone {
+  background-image: radial-gradient(circle at center, currentColor 1.1px, transparent 1.4px);
+  background-size: 9px 9px;
+}
+
+@utility halftone-fine {
+  background-image: radial-gradient(circle at center, currentColor 0.8px, transparent 1px);
+  background-size: 5px 5px;
+}
+
+@utility burst {
+  background-image: repeating-conic-gradient(
+    from 0deg at 50% 50%,
+    currentColor 0deg 1deg,
+    transparent 1deg 5.5deg
+  );
+}
+
+@utility speedlines {
+  background-image: repeating-linear-gradient(
+    112deg,
+    transparent 0px,
+    transparent 16px,
+    currentColor 16px,
+    currentColor 22px,
+    transparent 22px,
+    transparent 52px
+  );
+}
+
+@utility paper-grain {
+  background-image: radial-gradient(circle at center, currentColor 0.5px, transparent 0.8px);
+  background-size: 13px 13px;
+}
+
+@utility panel-ink {
+  border: 3px solid var(--color-ink);
+  background: var(--color-panel);
+  box-shadow: var(--shadow-ink);
+}
+
+@utility caption-box {
+  border: 2.5px solid var(--color-ink);
+  font-family: var(--font-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+@utility btn-ink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 3px solid var(--color-ink);
+  background: var(--color-panel);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: var(--shadow-ink-sm);
+  transition: transform 0.18s var(--ease-snap), box-shadow 0.18s var(--ease-snap), background-color 0.18s linear;
+  cursor: pointer;
+}
+
+@utility btn-ink-solid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 3px solid var(--color-ink);
+  background: var(--color-ink);
+  color: var(--color-panel);
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 4px 4px 0 0 var(--color-smudge);
+  transition: transform 0.18s var(--ease-snap), box-shadow 0.18s var(--ease-snap);
+  cursor: pointer;
+}
+
+/* ---------- base ---------- */
+
+html {
+  scroll-behavior: smooth;
+  font-family: var(--font-body);
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+body {
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+:focus-visible {
+  outline: 3px dashed var(--color-ink);
+  outline-offset: 3px;
+}
+
+/* ink scrollbar */
+html {
+  scrollbar-color: var(--color-ink) var(--color-paper);
+  scrollbar-width: thin;
+}
+
+section[id] {
+  scroll-margin-top: 5.5rem;
+}
+
+/* ---------- printed-paper background scene ---------- */
+
+/* lock page scroll while a dialog is open */
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
+.bg-scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bg-dots {
+  position: absolute;
+  inset: -2px;
+  background-image: radial-gradient(circle, var(--color-ink) 1.05px, transparent 1.4px);
+  background-size: 20px 20px;
+  opacity: 0.055;
+}
+
+/* the invisible terminal input needs its own visible focus ring */
+#term-input:focus-visible {
+  outline: 3px dashed var(--color-paper);
+  outline-offset: 2px;
+}
+
+/* ---------- orchestrated ink-in reveal ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .js .reveal {
+    opacity: 0;
+    transform: translateY(20px) rotate(var(--tilt, 0deg));
+    clip-path: inset(0 0 12% 0);
+    transition:
+      opacity 0.55s var(--ease-snap),
+      transform 0.55s var(--ease-snap),
+      clip-path 0.55s var(--ease-snap);
+    transition-delay: var(--reveal-delay, 0s);
+  }
+  .js .reveal.inked {
+    opacity: 1;
+    transform: translateY(0) rotate(var(--tilt, 0deg));
+    clip-path: inset(0 0 0 0);
+  }
+
+  .js .sfx-pop {
+    opacity: 0;
+    transform: scale(0.4) rotate(calc(var(--tilt, -8deg) - 10deg));
+    transition:
+      opacity 0.4s var(--ease-snap),
+      transform 0.5s var(--ease-snap);
+    transition-delay: var(--reveal-delay, 0s);
+  }
+  .js .sfx-pop.inked {
+    opacity: 1;
+    transform: scale(1) rotate(var(--tilt, -8deg));
+  }
+
+  @keyframes burst-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .burst-spin {
+    animation: burst-spin 90s linear infinite;
+  }
+
+  @keyframes marquee-roll {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  .marquee-track {
+    animation: marquee-roll 26s linear infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* isolate-the-track: hovering the saga dims the sibling panels */
+@media (prefers-reduced-motion: no-preference) {
+  .saga-grid:has(.work-panel:hover) .work-panel:not(:hover) {
+    opacity: 0.38;
+  }
+  .work-panel {
+    transition: opacity 0.35s var(--ease-snap), box-shadow 0.35s var(--ease-snap);
+  }
+  .work-panel .panel-inner {
+    transition: transform 0.35s var(--ease-snap);
+  }
+  .work-panel:hover {
+    box-shadow: var(--shadow-ink-lg);
+  }
+  .work-panel:hover .panel-inner {
+    transform: translate(-3px, -3px);
+  }
+}
+
+/* texture-based states: hover raises a halftone wash, press/focus inverts the ink */
+.work-panel .ht-wash {
+  opacity: 0;
+  transition: opacity 0.3s var(--ease-snap);
+}
+.work-panel:hover .ht-wash,
+.work-panel:focus-visible .ht-wash {
+  opacity: 0.09;
+}
+
+.btn-ink:active,
+.btn-ink-solid:active {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+/* speech balloon: the world's native annotation device */
+.balloon {
+  position: relative;
+  display: inline-block;
+}
+.balloon::after {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: -7.5px;
+  width: 10px;
+  height: 10px;
+  background: var(--color-panel);
+  border-left: 2.5px solid var(--color-ink);
+  border-top: 2.5px solid var(--color-ink);
+  transform: rotate(45deg);
+}

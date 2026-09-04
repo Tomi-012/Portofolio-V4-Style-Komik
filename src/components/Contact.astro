@@ -1,0 +1,212 @@
+---
+import SectionHead from "./SectionHead.astro";
+import { getDict, type Locale } from "../i18n/ui";
+
+interface Props {
+  locale?: Locale;
+}
+const { locale = "en" } = Astro.props;
+const t = getDict(locale);
+const email = "ilham.bustomi@example.dev";
+
+const socials = [
+  {
+    label: "GitHub",
+    href: "https://github.com/Tomi-012",
+    icon: '<svg viewBox="0 0 16 16" class="size-6 fill-current" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>',
+  },
+  {
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/in/ilham-bustomi-4a76633a1/",
+    icon: '<svg viewBox="0 0 24 24" class="size-6 fill-none stroke-current stroke-[2.2px]" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10.5V17M8 7.2v.1M12 17v-4a2 2 0 0 1 4 0v4" stroke-linecap="round"/></svg>',
+  },
+  {
+    label: "X (Twitter)",
+    href: "https://x.com/",
+    icon: '<svg viewBox="0 0 24 24" class="size-6 fill-none stroke-current stroke-[2.6px]" aria-hidden="true"><path d="M5 4l14 16M19 4L5 20" stroke-linecap="round"/></svg>',
+  },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/_ilham_bustomi_/",
+    icon: '<svg viewBox="0 0 24 24" class="size-6 fill-none stroke-current stroke-[2.2px]" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.2 6.8v.1" stroke-linecap="round" stroke-width="3"/></svg>',
+  },
+];
+---
+
+<section id="signal" class="px-4 py-16 sm:px-6 sm:py-24">
+  <div class="mx-auto max-w-7xl">
+    <SectionHead chapter={t.signal.chapter} title={t.signal.title} note={t.signal.note} />
+
+    <div class="grid gap-8 lg:grid-cols-[5fr_7fr] lg:gap-10">
+      <!-- signal panel -->
+      <div class="reveal relative overflow-hidden border-[3px] border-ink bg-ink p-6 text-paper shadow-ink sm:p-8">
+        <div class="burst burst-spin pointer-events-none absolute -right-24 -bottom-24 size-80 text-paper opacity-15" aria-hidden="true"></div>
+        <h3 class="font-display text-5xl leading-[0.95] tracking-wide sm:text-6xl">{t.signal.panelTitle}</h3>
+        <p class="mt-4 max-w-sm text-base leading-relaxed text-paper/85">
+          {t.signal.panelText}
+        </p>
+
+        <div class="mt-7">
+          <p class="font-caption text-xs font-semibold tracking-[0.2em] text-paper/70 uppercase">{t.signal.directFreq}</p>
+          <div class="mt-2 flex flex-wrap items-stretch gap-3">
+            <a href={`mailto:${email}`} class="caption-box break-all bg-paper px-3 py-2 text-sm font-semibold text-ink hover:bg-paper/85 sm:text-base">
+              {email}
+            </a>
+            <button
+              type="button"
+              id="copy-email"
+              data-email={email}
+              data-default={t.signal.copy}
+              data-copied={t.signal.copied}
+              class="btn-ink px-4 py-2 text-base"
+              aria-label="Copy email address to clipboard"
+            >
+              <span class="copy-label">{t.signal.copy}</span>
+            </button>
+          </div>
+          <p
+            id="copy-feedback"
+            class="mt-2 font-caption text-xs font-semibold tracking-[0.14em] uppercase text-paper/70"
+            role="status"
+            aria-live="polite"
+            data-ok={t.signal.copyOk}
+            data-fail={t.signal.copyFail}
+          ></p>
+        </div>
+
+        <div class="mt-7">
+          <p class="font-caption text-xs font-semibold tracking-[0.2em] text-paper/70 uppercase">{t.signal.haunt}</p>
+          <ul class="mt-3 flex gap-3">
+            {
+              socials.map((s) => (
+                <li>
+                  <a
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    class="grid size-12 place-items-center border-[3px] border-paper text-paper transition-transform duration-150 hover:-translate-y-1 hover:bg-paper hover:text-ink"
+                  >
+                    <Fragment set:html={s.icon} />
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+
+      <!-- transmission form -->
+      <form
+        id="signal-form"
+        class="reveal border-[3px] border-ink bg-panel p-6 shadow-ink sm:p-8"
+        style="--reveal-delay:150ms"
+        novalidate
+        data-err-name={t.signal.form.errName}
+        data-err-email={t.signal.form.errEmail}
+        data-err-msg={t.signal.form.errMsg}
+        data-subject-tpl={t.signal.form.subjectTpl}
+      >
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label for="f-name" class="font-caption text-xs font-semibold tracking-[0.18em] uppercase">{t.signal.form.codename}</label>
+            <input
+              id="f-name"
+              name="name"
+              type="text"
+              required
+              autocomplete="name"
+              placeholder={t.signal.form.codenamePh}
+              class="mt-1.5 w-full border-[3px] border-ink bg-paper px-3 py-2.5 text-base placeholder:text-ink/40 focus:outline-hidden"
+            />
+            <p class="balloon mt-2 hidden border-[2.5px] border-ink bg-panel px-2.5 py-1 font-caption text-xs font-semibold tracking-wide text-ink" data-error-for="f-name" aria-live="polite"></p>
+          </div>
+          <div>
+            <label for="f-email" class="font-caption text-xs font-semibold tracking-[0.18em] uppercase">{t.signal.form.replyFreq}</label>
+            <input
+              id="f-email"
+              name="email"
+              type="email"
+              required
+              autocomplete="email"
+              placeholder="you@anywhere.dev"
+              class="mt-1.5 w-full border-[3px] border-ink bg-paper px-3 py-2.5 text-base placeholder:text-ink/40 focus:outline-hidden"
+            />
+            <p class="balloon mt-2 hidden border-[2.5px] border-ink bg-panel px-2.5 py-1 font-caption text-xs font-semibold tracking-wide text-ink" data-error-for="f-email" aria-live="polite"></p>
+          </div>
+        </div>
+        <div class="mt-5">
+          <label for="f-message" class="font-caption text-xs font-semibold tracking-[0.18em] uppercase">{t.signal.form.briefing}</label>
+          <textarea
+            id="f-message"
+            name="message"
+            rows="6"
+            required
+            placeholder={t.signal.form.briefingPh}
+            class="mt-1.5 w-full resize-y border-[3px] border-ink bg-paper px-3 py-2.5 text-base leading-relaxed placeholder:text-ink/40 focus:outline-hidden"
+          ></textarea>
+          <p class="balloon mt-2 hidden border-[2.5px] border-ink bg-panel px-2.5 py-1 font-caption text-xs font-semibold tracking-wide text-ink" data-error-for="f-message" aria-live="polite"></p>
+        </div>
+        <div class="mt-6 flex flex-wrap items-center gap-4">
+          <button type="submit" class="btn-ink-solid px-7 py-3 text-xl hover:-translate-y-0.5">{t.signal.form.transmit}</button>
+          <p class="font-caption text-xs leading-snug font-medium tracking-[0.1em] text-ink/60 uppercase whitespace-pre-line">
+            {t.signal.form.note}
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Copy email with visible state feedback (labels localized via data attributes).
+  const copyBtn = document.getElementById("copy-email");
+  const feedback = document.getElementById("copy-feedback");
+  copyBtn?.addEventListener("click", async () => {
+    const email = copyBtn.dataset.email ?? "";
+    const label = copyBtn.querySelector(".copy-label");
+    try {
+      await navigator.clipboard.writeText(email);
+      if (label) label.textContent = copyBtn.dataset.copied ?? "COPIED!";
+      if (feedback) feedback.textContent = feedback.dataset.ok ?? "";
+    } catch {
+      if (feedback) feedback.textContent = feedback.dataset.fail ?? "";
+    }
+    setTimeout(() => {
+      if (label) label.textContent = copyBtn.dataset.default ?? "COPY";
+      if (feedback) feedback.textContent = "";
+    }, 2400);
+  });
+
+  // Validate, then hand off to the visitor's mail app.
+  const form = document.getElementById("signal-form") as HTMLFormElement | null;
+  form?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    let ok = true;
+    const data = new FormData(form);
+
+    const check = (id: string, test: (v: string) => boolean, msg: string) => {
+      const input = form.querySelector<HTMLInputElement>(`#${id}`);
+      const err = form.querySelector(`[data-error-for="${id}"]`);
+      const value = String(data.get(id) ?? "").trim();
+      const valid = test(value);
+      if (input) input.setAttribute("aria-invalid", String(!valid));
+      if (err) {
+        err.textContent = valid ? "" : msg;
+        err.classList.toggle("hidden", valid);
+      }
+      ok = ok && valid;
+    };
+
+    check("f-name", (v) => v.length > 0, form.dataset.errName ?? "");
+    check("f-email", (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), form.dataset.errEmail ?? "");
+    check("f-message", (v) => v.length >= 10, form.dataset.errMsg ?? "");
+
+    if (!ok) return;
+    const subject = encodeURIComponent(
+      (form.dataset.subjectTpl ?? "Signal from {name}").replace("{name}", String(data.get("name") ?? ""))
+    );
+    const body = encodeURIComponent(`${data.get("message")}\n\n— ${data.get("name")} (${data.get("email")})`);
+    window.location.href = `mailto:${copyBtn?.dataset.email ?? ""}?subject=${subject}&body=${body}`;
+  });
+</script>

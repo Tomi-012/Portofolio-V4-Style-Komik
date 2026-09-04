@@ -1,0 +1,79 @@
+---
+import SectionHead from "./SectionHead.astro";
+import CoverArt from "./CoverArt.astro";
+import Sfx from "./Sfx.astro";
+import { projects } from "../data/projects";
+import { getDict, type Locale } from "../i18n/ui";
+
+interface Props {
+  locale?: Locale;
+}
+const { locale = "en" } = Astro.props;
+const t = getDict(locale);
+
+const statusClass: Record<string, string> = {
+  SHIPPED: "bg-ink text-paper",
+  "IN COMBAT": "bg-panel text-ink",
+  "IN THE LAB": "bg-panel text-ink halftone-fine",
+};
+---
+
+<section id="saga" class="px-4 pt-16 sm:px-6 sm:pt-24">
+  <div class="mx-auto max-w-7xl">
+    <SectionHead chapter={t.saga.chapter} title={t.saga.title} note={t.saga.note} />
+
+    <div class="saga-grid grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        projects.map((p, i) => {
+          const pt = p.i18n[locale];
+          return (
+            <a
+              href={locale === "id" ? `/id/works/${p.slug}/` : `/works/${p.slug}/`}
+              class:list={[
+                "work-panel reveal group relative flex flex-col border-[3px] border-ink bg-panel shadow-ink",
+                p.span === "splash" && "sm:col-span-2 sm:row-span-2",
+              ]}
+              style={`--tilt:${i % 3 === 1 ? "0.5deg" : i % 3 === 2 ? "-0.45deg" : "0deg"}; --reveal-delay:${(i % 3) * 90}ms;`}
+            >
+              <div class="pointer-events-none absolute inset-0 z-10 ht-wash halftone text-ink" aria-hidden="true" />
+              <div class="panel-inner flex h-full flex-col">
+                <div class:list={["relative flex items-center justify-center overflow-hidden border-b-[3px] border-ink", p.span === "splash" ? "bg-paper p-8 sm:min-h-[420px] sm:p-10" : "bg-paper p-5"]}>
+                  <div class="halftone pointer-events-none absolute inset-0 text-ink opacity-[0.06]" aria-hidden="true" />
+                  <CoverArt variant={p.cover} id={p.slug} class:list={["w-full", p.span === "splash" ? "max-w-sm sm:max-w-md" : "mx-auto max-w-[220px]"]} />
+                  {p.span === "splash" && <Sfx text={p.sfx} size={150} tilt={10} pop delay={500} class="top-4 right-4" />}
+                </div>
+
+                <div class="flex flex-1 flex-col p-5">
+                  <div class="mb-2.5 flex flex-wrap items-center gap-2">
+                    <span class="font-display text-lg tracking-wider">#0{p.issue}</span>
+                    <span class:list={["caption-box px-2 py-0.5 text-[10px] font-semibold", statusClass[p.status]]}>{t.saga.status[p.status]}</span>
+                    <span class="ml-auto font-caption text-xs font-medium tracking-wider text-ink/60">{p.year}</span>
+                  </div>
+                  <h3 class:list={["font-display leading-[0.95] tracking-wide", p.span === "splash" ? "text-4xl sm:text-5xl" : "text-3xl"]}>
+                    {p.title}
+                  </h3>
+                  <p class:list={["mt-2 flex-1 leading-relaxed text-ink/85", p.span === "splash" ? "text-base sm:text-lg" : "text-sm sm:text-base"]}>{pt.tagline}</p>
+                  <ul class="mt-4 flex flex-wrap gap-1.5" aria-label="Tech stack">
+                    {p.stack.map((s) => (
+                      <li class="border-2 border-ink px-1.5 py-0.5 font-caption text-[10px] font-semibold tracking-[0.14em] uppercase">{s}</li>
+                    ))}
+                  </ul>
+                  <span class="mt-4 inline-flex items-center gap-1.5 font-display text-lg tracking-wider underline decoration-[3px] underline-offset-4 group-hover:bg-ink group-hover:text-paper group-hover:no-underline">
+                    {t.saga.readIssue}
+                    <svg viewBox="0 0 24 24" class="size-4 fill-none stroke-current stroke-[3px] transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true">
+                      <path d="M4 12h15M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </span>
+                </div>
+              </div>
+            </a>
+          );
+        })
+      }
+    </div>
+
+    <p class="reveal caption-box mx-auto mt-8 max-w-2xl bg-panel px-4 py-2 text-center text-xs font-medium text-ink/75 sm:text-sm">
+      {t.saga.demoNote}
+    </p>
+  </div>
+</section>

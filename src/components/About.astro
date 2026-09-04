@@ -1,0 +1,68 @@
+---
+import Avatar from "./Avatar.astro";
+import SectionHead from "./SectionHead.astro";
+import { getDict, type Locale } from "../i18n/ui";
+
+interface Props {
+  locale?: Locale;
+}
+const { locale = "en" } = Astro.props;
+const t = getDict(locale);
+---
+
+<section id="origin" class="px-4 pt-16 sm:px-6 sm:pt-24">
+  <div class="mx-auto max-w-7xl">
+    <SectionHead chapter={t.about.chapter} title={t.about.title} note={t.about.note} />
+
+    <div class="grid gap-8 lg:grid-cols-[5fr_7fr] lg:gap-10">
+      <!-- portrait panel -->
+      <figure class="reveal relative border-[3px] border-ink bg-panel p-6 shadow-ink">
+        <div class="halftone pointer-events-none absolute -top-6 -right-6 -z-10 size-40 text-ink opacity-15" aria-hidden="true"></div>
+        <Avatar class="mx-auto w-full max-w-[240px]" />
+        <figcaption class="caption-box mt-5 bg-panel px-3 py-2 text-center text-xs font-semibold sm:text-sm">
+          {t.about.figcaption}
+        </figcaption>
+        <!-- speech bubble -->
+        <div class="absolute -top-7 right-4 max-w-[190px] rotate-2 border-[2.5px] border-ink bg-panel px-3 py-2 sm:-right-8" aria-hidden="true">
+          <p class="font-display text-sm leading-tight tracking-wide sm:text-base">{t.about.bubble}</p>
+          <svg viewBox="0 0 20 14" class="absolute -bottom-[13px] left-8 w-5 fill-panel" aria-hidden="true">
+            <path d="M2 0 H18 L6 13 Z" stroke="var(--color-ink)" stroke-width="2.5" />
+            <rect x="4.2" y="-2" width="12" height="4" fill="var(--color-panel)" />
+          </svg>
+        </div>
+      </figure>
+
+      <!-- character sheet -->
+      <div class="reveal border-[3px] border-ink bg-panel p-6 shadow-ink sm:p-8" style="--reveal-delay:150ms">
+        <dl class="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+          <div>
+            <dt class="font-caption text-xs font-semibold tracking-[0.18em] text-ink/60 uppercase">{t.about.sheet.name}</dt>
+            <dd class="mt-0.5 font-display text-2xl tracking-wide">{t.about.sheet.nameValue}</dd>
+          </div>
+          <div>
+            <dt class="font-caption text-xs font-semibold tracking-[0.18em] text-ink/60 uppercase">{t.about.sheet.class}</dt>
+            <dd class="mt-0.5 font-display text-2xl tracking-wide">{t.about.sheet.classValue}</dd>
+          </div>
+          <div>
+            <dt class="font-caption text-xs font-semibold tracking-[0.18em] text-ink/60 uppercase">{t.about.sheet.alignment}</dt>
+            <dd class="mt-0.5 font-display text-2xl tracking-wide">{t.about.sheet.alignmentValue}</dd>
+          </div>
+          <div>
+            <dt class="font-caption text-xs font-semibold tracking-[0.18em] text-ink/60 uppercase">{t.about.sheet.firstAppearance}</dt>
+            <dd class="mt-0.5 font-display text-2xl tracking-wide">{t.about.sheet.firstAppearanceValue}</dd>
+          </div>
+        </dl>
+
+        <div class="my-6 h-[3px] w-full bg-ink" aria-hidden="true"></div>
+
+        <div class="space-y-4 text-base leading-relaxed text-ink/90">
+          <p set:html={t.about.p1} />
+          <p set:html={t.about.p2} />
+          <p class="caption-box inline-block bg-panel px-3 py-1.5 text-sm font-semibold">
+            {t.about.weakness}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

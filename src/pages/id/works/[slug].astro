@@ -1,0 +1,15 @@
+---
+import Base from "../../../layouts/Base.astro";
+import WorkDetail from "../../../components/pages/WorkDetail.astro";
+import { projects } from "../../../data/projects";
+
+export function getStaticPaths() {
+  return projects.map((p) => ({ params: { slug: p.slug }, props: { project: p } }));
+}
+
+const { project: p } = Astro.props;
+---
+
+<Base locale="id" title={`EDISI #0${p.issue}: ${p.title} — The Dev Saga`} description={p.i18n.id.tagline}>
+  <WorkDetail project={p} locale="id" />
+</Base>

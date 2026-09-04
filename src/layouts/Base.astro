@@ -1,0 +1,121 @@
+---
+import "../styles/global.css";
+import "@fontsource/bangers";
+import "@fontsource/oswald/500.css";
+import "@fontsource/oswald/600.css";
+import "@fontsource/oswald/700.css";
+import "@fontsource/archivo/400.css";
+import "@fontsource/archivo/400-italic.css";
+import "@fontsource/archivo/500.css";
+import "@fontsource/archivo/600.css";
+import "@fontsource/archivo/700.css";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+import PixelPal from "../components/PixelPal.astro";
+import { getDict, type Locale } from "../i18n/ui";
+
+interface Props {
+  locale?: Locale;
+  title?: string;
+  description?: string;
+  /** Override the language-toggle target (used on the 404 page). */
+  langHref?: string;
+}
+
+const {
+  locale = "en",
+  title,
+  description,
+  langHref,
+} = Astro.props;
+const t = getDict(locale);
+const metaTitle = title ?? t.meta.title;
+const metaDescription = description ?? t.meta.description;
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{metaTitle}</title>
+    <meta name="description" content={metaDescription} />
+    <meta property="og:title" content={metaTitle} />
+    <meta property="og:description" content={metaDescription} />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script is:inline>
+      document.documentElement.classList.add("js");
+    </script>
+  </head>
+  <body class="text-ink antialiased">
+    <!-- printed-paper scene: dot field + ink washes, fixed behind the story -->
+    <div class="bg-scene" aria-hidden="true">
+      <div class="bg-dots"></div>
+      <div
+        class="halftone absolute -top-28 -left-28 size-[460px] text-ink opacity-10"
+        style="mask-image: radial-gradient(circle at center, black 12%, transparent 70%); -webkit-mask-image: radial-gradient(circle at center, black 12%, transparent 70%);"
+      ></div>
+      <div
+        class="burst absolute -top-44 -right-52 size-[680px] text-ink opacity-[0.05]"
+        style="mask-image: radial-gradient(circle at center, black 10%, transparent 62%); -webkit-mask-image: radial-gradient(circle at center, black 10%, transparent 62%);"
+      ></div>
+      <div
+        class="speedlines absolute -bottom-28 -left-32 size-[560px] text-ink opacity-[0.055]"
+        style="mask-image: radial-gradient(circle at center, black 12%, transparent 66%); -webkit-mask-image: radial-gradient(circle at center, black 12%, transparent 66%);"
+      ></div>
+      <div
+        class="halftone absolute -right-24 -bottom-24 size-[400px] text-ink opacity-[0.09]"
+        style="mask-image: radial-gradient(circle at center, black 15%, transparent 70%); -webkit-mask-image: radial-gradient(circle at center, black 15%, transparent 70%);"
+      ></div>
+    </div>
+    <a
+      href="#origin"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:caption-box focus:bg-panel focus:px-3 focus:py-2"
+    >
+      {locale === "id" ? "Lompat ke cerita" : "Skip to story"}
+    </a>
+    <Nav locale={locale} langHref={langHref} />
+    <main id="main"><slot /></main>
+    <Footer locale={locale} langHref={langHref} />
+    <PixelPal locale={locale} />
+    <script>
+      // One orchestrated clock: everything reveals through the same observer.
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("inked");
+              io.unobserve(entry.target);
+            }
+          }
+        },
+        { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
+      );
+      document.querySelectorAll(".reveal, .sfx-pop").forEach((el) => io.observe(el));
+
+      // Reading progress: ink meter under the masthead.
+      const bar = document.getElementById("progress-ink");
+      if (bar) {
+        const update = () => {
+          const max = document.documentElement.scrollHeight - window.innerHeight;
+          bar.style.width = `${Math.min(100, Math.max(0, (window.scrollY / Math.max(1, max)) * 100))}%`;
+        };
+        update();
+        window.addEventListener("scroll", update, { passive: true });
+      }
+
+      // Speed lines live on scroll (one clock, motion-safe only).
+      const lines = document.getElementById("hero-speedlines");
+      if (lines && window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+        window.addEventListener(
+          "scroll",
+          () => {
+            lines.style.backgroundPositionX = `${Math.round(window.scrollY * -0.22)}px`;
+          },
+          { passive: true }
+        );
+      }
+    </script>
+  </body>
+</html>
